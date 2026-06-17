@@ -7,8 +7,27 @@ let siteUrlErrMsg = document.getElementById("siteUrlErrMsg");
 
 let bookmarksList = document.getElementById("bookmarksList");
 
-let list = JSON.parse(sessionStorage.getItem("bookmarks")) || [];
+let list = JSON.parse(sessionStorage.getItem("bookmarks")) || [{
+    id: count++,
+    siteName: "Bookmarks Bar",
+    siteUrl: "https://geeked-aadi.github.io/bookmark-maker/"
+}];
 let count = list.length;
+
+function normalizeUrl(rawUrl) {
+    const trimmedUrl = rawUrl.trim();
+    const prefixedUrl = /^(https?:)?\/\//i.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`;
+
+    try {
+        const parsed = new URL(prefixedUrl);
+        if (!/^https?:$/i.test(parsed.protocol)) {
+            return null;
+        }
+        return parsed.href;
+    } catch {
+        return null;
+    }
+}
 
 function createAndAppendBookmark(bookmark) {
     let liEle = document.createElement("li");
@@ -23,6 +42,7 @@ function createAndAppendBookmark(bookmark) {
     aEle.textContent = bookmark.siteUrl;
     aEle.href = bookmark.siteUrl;
     aEle.target = "_blank";
+    aEle.rel = "noopener noreferrer";
 
     divEle.appendChild(h3Ele);
     divEle.appendChild(aEle);
@@ -35,15 +55,17 @@ for (let bookmark of list) {
 }
 
 siteNameInput.addEventListener("change", function () {
-    if (siteNameInput.value === "") {
+    if (siteNameInput.value.trim() === "") {
         siteNameErrMsg.textContent = "*Required";
     } else {
         siteNameErrMsg.textContent = "";
     }
 });
 siteUrlInput.addEventListener("change", function () {
-    if (siteUrlInput.value === "") {
+    if (siteUrlInput.value.trim() === "") {
         siteUrlErrMsg.textContent = "*Required";
+    } else if (!normalizeUrl(siteUrlInput.value)) {
+        siteUrlErrMsg.textContent = "*Enter a valid URL";
     } else {
         siteUrlErrMsg.textContent = "";
     }
@@ -54,15 +76,18 @@ bookmarkForm.addEventListener("submit", function (event) {
 
     let isValid = true;
 
-    if (siteNameInput.value === "") {
+    if (siteNameInput.value.trim() === "") {
         siteNameErrMsg.textContent = "*Required";
         isValid = false;
     } else {
         siteNameErrMsg.textContent = "";
     }
 
-    if (siteUrlInput.value === "") {
+    if (siteUrlInput.value.trim() === "") {
         siteUrlErrMsg.textContent = "*Required";
+        isValid = false;
+    } else if (!normalizeUrl(siteUrlInput.value)) {
+        siteUrlErrMsg.textContent = "*Enter a valid URL";
         isValid = false;
     } else {
         siteUrlErrMsg.textContent = "";
@@ -72,10 +97,12 @@ bookmarkForm.addEventListener("submit", function (event) {
         return;
     }
 
+    const normalizedSiteUrl = normalizeUrl(siteUrlInput.value);
+
     let bookmark = {
         id: count++,
-        siteName: siteNameInput.value,
-        siteUrl: siteUrlInput.value
+        siteName: siteNameInput.value.trim(),
+        siteUrl: normalizedSiteUrl
     };
 
     list.push(bookmark);
