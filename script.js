@@ -8,7 +8,7 @@ let siteUrlErrMsg = document.getElementById("siteUrlErrMsg");
 let bookmarksList = document.getElementById("bookmarksList");
 
 let list = JSON.parse(sessionStorage.getItem("bookmarks")) || [{
-    id: count++,
+    id: 0,
     siteName: "Bookmarks Bar",
     siteUrl: "https://geeked-aadi.github.io/bookmark-maker/"
 }];
